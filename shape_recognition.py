@@ -52,17 +52,16 @@ def main():
     while True:
         ret, frame = cap.read()
 
-        result_frame_triangle, triangle_detected = detect_shape(frame, "triangle")
-        result_frame_square, square_detected = detect_shape(frame, "square")
+        _, triangle_detected = detect_shape(frame, "triangle")
+        result_frame, square_detected = detect_shape(frame, "square")
 
-        cv2.imshow("Specific Red Triangle Detection", result_frame_triangle)
-        cv2.imshow("Specific Yellow Square Detection", result_frame_square)
+        cv2.imshow("Shape detection", result_frame)
 
         if triangle_detected:
-            print("Detected specific red triangle!")
+            print("Detected red triangle!")
 
         if square_detected:
-            print("Detected specific yellow square!")
+            print("Detected yellow square!")
 
         # Zakończenie pętli po naciśnięciu klawisza 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
