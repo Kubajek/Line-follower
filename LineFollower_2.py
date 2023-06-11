@@ -39,6 +39,8 @@ i2c_bus = busio.I2C(board.SCL, board.SDA)
 pca = adafruit_pca9685.PCA9685(i2c_bus, address=PCA9685_I2C_ADDRESS)
 pca.frequency = 100  # Ustawienie częstotliwości (w Hz)
 
+kit = ServoKit(channels=16)
+
 # Inicjalizacja pinów GPIO
 GPIO.setmode(GPIO.BCM)  # Ustawienie numeracji pinów po numeracji GPIO
 GPIO.setup(PRZ_PR_APHASE, GPIO.OUT)
@@ -135,14 +137,14 @@ def stop_move():
 def box_up():
     angles = list(range(45, -1, -1))
     for angle in angles:
-        ServoKit.servo[WIDLY].angle = angle
+        kit.servo[WIDLY].angle = angle
         time.sleep(0.015)
 
 
 def box_down():
     angles = list(range(0, 46))
     for angle in angles:
-        ServoKit.servo[WIDLY].angle = angle
+        kit.servo[WIDLY].angle = angle
         time.sleep(0.015)
 
 
