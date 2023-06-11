@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 
 def line_follower(image):
+    direction = 0
+
     # Konwertowanie kolorów z BGR do HSV
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     # Definicja zakresu koloru czarnej linii na białym tle w przestrzeni HSV
@@ -24,35 +26,46 @@ def line_follower(image):
             cx = int(M['m10'] / M['m00'])
             cy = int(M['m01'] / M['m00'])
 
-            print("CX: " + str(cx) + " CY: " + str(cy))
+            # print("CX: " + str(cx) + " CY: " + str(cy))
 
             if cx >= 480:
                 # print("Turn Left")
-                return 1
+                direction = 1
             elif cx < 480 and cx > 160:
                 # print("On Track")
-                return 2
+                direction = 2
             elif cx <= 160:
                 # print("Turn Right")
-                return 3
+                direction = 3
 
             # Rysowanie centroidy
-            # cv2.circle(image, (cx, cy), 5, (255, 255, 255), -1)
+            cv2.circle(image, (cx, cy), 5, (255, 255, 255), -1)
 
             # # Rysowanie konturu
-            # cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
+            cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
 
-        # Wyświetlanie obrazów
-        #cv2.imshow("Mask", mask)
-        #cv2.imshow("Frame", image)
-
-
+    return image, direction
 
 def main():
     cap = cv2.VideoCapture(0)
 
     while True:
         ret, frame = cap.read()
+        image, direction = line_follower(frame)
+
+        match direction:
+            case 0:
+                print("No path")
+            case 1:
+                print("Go left")
+            case 2:
+                print("Go straight")
+            case 3:
+                print("Go right")
+            case _:
+                print("Error")
+
+        cv2.imshow("Frame", image)
 
         # Wyjście po naciśnięciu klawisza 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -61,3 +74,5 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
+if __name__ == '__main__':
+    main()
