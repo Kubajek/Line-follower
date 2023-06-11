@@ -167,21 +167,17 @@ try:
 
         _, path_stop, path_interrupt = detect_shape(frame)
 
-        if (path_stop):
-            if(licznik_sq == 0):
-                wait_sq = True
-                path_stop = False
-                stop_move()
-                box_down()
-        elif (path_interrupt):
-            if (licznik_tr == 0):
-                move_left()
-                wait_tr = True
-                path_interrupt = False
-                time.sleep(1.5)
-                stop_move()
-            else:
-                print('jeszcze nie')
+        if (path_stop and licznik_sq == 0):
+            wait_sq = True
+            path_stop = False
+            stop_move()
+            box_down()
+        elif (path_interrupt and licznik_tr == 0):
+            move_left()
+            wait_tr = True
+            path_interrupt = False
+            time.sleep(1.5)
+            stop_move()
         else:
             # Wykrywanie konturów
             contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
