@@ -144,9 +144,11 @@ cap.set(3, 640)  # szerokość
 cap.set(4, 480)  # wysokość
 
 path_interrupt = False
-wait = False
+wait_tr = False
+wait_sq = False
 
 licznik_tr = 0
+licznik_sq = 0
 
 try:
     while True:
@@ -163,16 +165,18 @@ try:
         # Tworzenie maski koloru czarnej linii
         mask = cv2.inRange(hsv, lower_black, upper_black)
 
-        
         _, path_stop, path_interrupt = detect_shape(frame)
-        # print(path_interrupt)
+
         if (path_stop):
-            stop_move()
-            box_down()
+            if(licznik_sq == 0):
+                wait_sq = True
+                path_stop = False
+                stop_move()
+                box_down()
         elif (path_interrupt):
             if (licznik_tr == 0):
                 move_left()
-                wait = True
+                wait_tr = True
                 path_interrupt = False
                 time.sleep(1.5)
                 stop_move()
@@ -218,12 +222,19 @@ try:
         # cv2.imshow("Line Detection", frame)
         # cv2.imshow("Mask", mask)
         
-        if (wait):
+        if (wait_tr):
             licznik_tr += 1
 
         if (licznik_tr >= 20):
             licznik_tr = 0
-            wait = False
+            wait_tr = False
+
+        if (wait_sq):
+            licznik_sq += 1
+
+        if (licznik_sq >= 20):
+            licznik_sq = 0
+            wait_sq = False
         # Zakończenie pętli po naciśnięciu klawisza 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
