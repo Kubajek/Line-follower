@@ -6,6 +6,7 @@ import busio
 import adafruit_pca9685
 import RPi.GPIO as GPIO
 from shape_recogniotion import detect_shape
+from adafruit_servokit import ServoKit
 
 # Adres I2C modułu PCA9685
 PCA9685_I2C_ADDRESS = 0x40
@@ -123,6 +124,18 @@ def stop_move():
     pca.channels[TYL_PR_AENABLE].duty_cycle = 0x0000
     pca.channels[TYL_LEW_BENABLE].duty_cycle = 0x0000
 
+def box_up():
+    angles = list(range(45, -1, -1))
+    for angle in angles:
+        ServoKit.servo[WIDLY].angle = angle
+        time.sleep(0.015)
+        
+def box_down():
+    angles = list(range(0, 46))
+    for angle in angles:
+        ServoKit.servo[WIDLY].angle = angle
+        time.sleep(0.015)
+
 # Inicjalizacja kamery
 cap = cv2.VideoCapture(0)
 
@@ -151,10 +164,12 @@ try:
         mask = cv2.inRange(hsv, lower_black, upper_black)
 
         
-        _, path_interrupt = detect_red_triangle(frame)
-        print(path_interrupt)
-
-        if (path_interrupt):
+        _, path_stop, path_interrupt = detect_shape(frame)
+        # print(path_interrupt)
+        if (path_stop):
+            stop_move()
+            box_down()
+        elif (path_interrupt):
             if (licznik_tr == 0):
                 move_left()
                 wait = True
