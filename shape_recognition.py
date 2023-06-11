@@ -29,7 +29,8 @@ def detect_shape(image, shape):
     elif shape == "square":
         contours, _ = cv2.findContours(yellow_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    shape_detected = False
+    square_detected = False
+    triangle_detected = False
     for contour in contours:
         # Aproksymacja konturu
         epsilon = 0.03 * cv2.arcLength(contour, True)
@@ -37,14 +38,14 @@ def detect_shape(image, shape):
 
         # Sprawdzenie, czy kontur ma odpowiednią liczbę wierzchołków i czy jest wystarczająco duży
         if shape == "triangle" and len(approx) == 3 and cv2.contourArea(approx) > 1000:
-            shape_detected = True
+            triangle_detected = True
             cv2.drawContours(image, [approx], 0, (0, 255, 0), 2)
 
         elif shape == "square" and len(approx) == 4 and cv2.contourArea(approx) > 1000:
-            shape_detected = True
+            square_detected = True
             cv2.drawContours(image, [approx], 0, (0, 255, 255), 2)
 
-    return image, shape_detected
+    return image, square_detected, triangle_detected
 
 def main():
     cap = cv2.VideoCapture(0)
@@ -52,8 +53,8 @@ def main():
     while True:
         ret, frame = cap.read()
 
-        _, triangle_detected = detect_shape(frame, "triangle")
-        result_frame, square_detected = detect_shape(frame, "square")
+        _, _, triangle_detected = detect_shape(frame, "triangle")
+        result_frame, square_detected, _ = detect_shape(frame, "square")
 
         cv2.imshow("Shape detection", result_frame)
 
