@@ -7,7 +7,7 @@ import adafruit_pca9685
 import RPi.GPIO as GPIO
 from shape_recognition import detect_shape
 from adafruit_servokit import ServoKit
-from LineFollower import line_follower
+from line_detection import line_follower
 
 # Adres I2C modułu PCA9685
 PCA9685_I2C_ADDRESS = 0x40
@@ -186,6 +186,7 @@ try:
                     ######################################
             match line_follower(frame):
                 case 1:
+                    print("Turn Left")
                     move_left()
                     time.sleep(0.05)
                     stop_move()
