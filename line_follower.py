@@ -5,7 +5,7 @@ import board
 import busio
 import adafruit_pca9685
 import RPi.GPIO as GPIO
-from shape_recogniotion import detect_shape
+from shape_recognition import detect_shape
 from adafruit_servokit import ServoKit
 
 # Adres I2C modułu PCA9685
@@ -165,7 +165,8 @@ try:
         # Tworzenie maski koloru czarnej linii
         mask = cv2.inRange(hsv, lower_black, upper_black)
 
-        _, path_stop, path_interrupt = detect_shape(frame)
+        _, _, path_interrupt = detect_shape(frame, "triangle")
+        _, path_stop, _ = detect_shape(frame, "square")
 
         if (path_stop and licznik_sq == 0):
             wait_sq = True
