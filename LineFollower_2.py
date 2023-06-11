@@ -165,7 +165,7 @@ try:
         # Odczytanie obrazu z kamery
         ret, frame = cap.read()
 
-
+        _, direction = line_follower(frame)
         _, _, path_interrupt = detect_shape(frame, "triangle")
         _, path_stop, _ = detect_shape(frame, "square")
 
@@ -184,7 +184,7 @@ try:
                     ######################################
                     ####LINE FOLLOWER ALE JAKO FUNKCJA####
                     ######################################
-            match line_follower(frame):
+            match direction:
                 case 1:
                     print("Turn Left")
                     move_left()
@@ -215,6 +215,7 @@ try:
         if (licznik_sq >= 20):
             licznik_sq = 0
             wait_sq = False
+
         # Zakończenie pętli po naciśnięciu klawisza 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
