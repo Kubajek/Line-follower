@@ -24,7 +24,7 @@ def read_qr(frame):
 
 def main():
 # Inicjalizacja kamery
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
 # Ustawienie rozdzielczości kamery
     cap.set(3, 640)  # szerokość
