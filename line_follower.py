@@ -250,7 +250,7 @@ try:
         if (wait_sq):
             licznik_sq += 1
 
-        if (licznik_sq >= 20):
+        if (licznik_sq >= 200):
             licznik_sq = 0
             wait_sq = False
 
