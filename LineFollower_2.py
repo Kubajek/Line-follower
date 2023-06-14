@@ -8,6 +8,7 @@ import RPi.GPIO as GPIO
 from shape_recognition import detect_shape
 from adafruit_servokit import ServoKit
 from line_detection import line_follower
+from client import call_orders
 
 # Adres I2C modułu PCA9685
 PCA9685_I2C_ADDRESS = 0x40
@@ -80,7 +81,7 @@ def set_motor_direction(motor, direction):
 
 
 # Funkcja do jazdy w przód
-def move_forward():
+def move_forward(stime):
     set_motor_direction("PRZ_PR", "PRZ")
     set_motor_direction("PRZ_LEW", "PRZ")
     set_motor_direction("TYL_PR", "PRZ")
@@ -89,10 +90,11 @@ def move_forward():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = SPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = SPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = SPEED
+    time.sleep(stime)
 
 
 # Funkcja do jazdy w tył
-def move_reverse():
+def move_reverse(stime):
     set_motor_direction("PRZ_PR", "TYL")
     set_motor_direction("PRZ_LEW", "TYL")
     set_motor_direction("TYL_PR", "TYL")
@@ -101,10 +103,11 @@ def move_reverse():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = SPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = SPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = SPEED
+    time.sleep(stime)
 
 
 # Funkcja do jazdy w lewo
-def move_left():
+def move_left(stime):
     set_motor_direction("PRZ_PR", "TYL")
     set_motor_direction("PRZ_LEW", "PRZ")
     set_motor_direction("TYL_PR", "TYL")
@@ -113,10 +116,11 @@ def move_left():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = TSPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = TSPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = TSPEED
+    time.sleep(stime)
 
 
 # Funkcja do jazdy w prawo
-def move_right():
+def move_right(stime):
     set_motor_direction("PRZ_PR", "PRZ")
     set_motor_direction("PRZ_LEW", "TYL")
     set_motor_direction("TYL_PR", "PRZ")
@@ -125,6 +129,7 @@ def move_right():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = TSPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = TSPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = TSPEED
+    time.sleep(stime)
 
 
 def stop_move():
@@ -162,7 +167,9 @@ wait_sq = False
 licznik_tr = 0
 licznik_omin_tr = 0
 licznik_sq = 0
-licznik_omin_sq = 0
+end_route = False
+
+start_programu = True
 
 try:
     while True:
@@ -174,47 +181,59 @@ try:
         _, path_stop, _ = detect_shape(frame, "square")
 
         if (path_stop and licznik_sq == 0):
-            move_left()
-            wait_sq = True
-            path_stop = False
-            time.sleep(3.75)
-            stop_move()
-            box_down()
-        elif (path_interrupt and licznik_tr == 0):
-            if (licznik_omin_tr == 0):
-                move_reverse()
-                time.sleep(1.8)
-                move_right()
-                wait_tr = True
-                path_interrupt = False
-                time.sleep(1.8)
+            if(end_route):
+                move_left(3.75)
+                wait_sq = True
+                path_stop = False
+                end_route = False
                 stop_move()
-                licznik_omin_tr = licznik_omin_tr + 1
-            elif (licznik_omin_tr == 1):
-                move_reverse()
+                box_down()
+            else:
+                if (not(start_programu)):
+                    move_reverse(2)
+                    box_down()
+                    move_forward(2)
+                    move_left(3.75)
+                while True:
+                    route = call_orders('172.16.10.195')
+
+                    if (route != 'wait'):
+                        break
+
                 time.sleep(2)
-                move_left()
-                wait = True
-                path_interrupt = False
-                time.sleep(1.8)
-                stop_move()
-                licznik_omin_tr = 0
+                box_up()
+                end_route = True
+
+        elif (path_interrupt and licznik_tr == 0):
+            move_reverse(1.8)
+
+            if (len(route) == 1):
+                move_left(0)
+            if (len(route) == 2):
+                if (licznik_omin_tr == 0):
+                    move_right(0)
+                else:
+                    move_reverse(0)
+
+            wait = True
+            path_interrupt = False
+            time.sleep(1.8)
+            stop_move()
+            licznik_omin_tr += 1
         else:
                     ######################################
                     ####LINE FOLLOWER ALE JAKO FUNKCJA####
                     ######################################
             if(direction==1):
                 print("Turn Left")
-                move_left()
-                time.sleep(0.05)
+                move_left(0.05)
                 stop_move()
             elif(direction==2):
                 print("On Track")
-                move_reverse()
+                move_reverse(0)
             elif(direction==3):
                 print("Turn Right")
-                move_right()
-                time.sleep(0.05)
+                move_right(0.05)
                 stop_move()
             else:
                 print("Nie wiem gdzie jechac")

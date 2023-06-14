@@ -44,13 +44,9 @@ while True:
     if(message=='Gimmie_orders'):
         match load_destination:
             case 'smartfony':
-                msg = '101'
+                msg = '11'
             case 'laptopy':
-                msg = '001'
-            case 'sluchawki':
-                msg = '010'
-            case 'ladowarki':
-                msg = '100'
+                msg = '0'
             case _:
                 msg = 'wait'
 
