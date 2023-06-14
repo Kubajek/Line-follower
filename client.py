@@ -17,7 +17,7 @@ def call_orders(server_ip):
 		if(data):
 			data=data.decode('utf-8')
 
-			print('Data from server: ', data)
+			# print('Data from server: ', data)
 			break
 	
 	return data

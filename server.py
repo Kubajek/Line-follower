@@ -6,7 +6,7 @@ from qr_recognition import read_qr
 #Setup address and message size
 bufferSize=1024
 ServerPort=2222
-ServerIP='172.16.10.197'   #WiFi Adrress Radek
+ServerIP='172.16.10.195'   #WiFi Adrress Radek
 
 #Setup socket and bind it to address
 RPIsocket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
