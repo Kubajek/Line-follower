@@ -140,14 +140,14 @@ def stop_move():
 
 
 def box_up():
-    angles = list(range(45, -1, -1))
+    angles = list(range(90, -1, -1))
     for angle in angles:
         kit.servo[WIDLY].angle = angle
         time.sleep(0.015)
 
 
 def box_down():
-    angles = list(range(0, 46))
+    angles = list(range(0, 91))
     for angle in angles:
         kit.servo[WIDLY].angle = angle
         time.sleep(0.015)
