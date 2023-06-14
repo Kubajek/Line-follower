@@ -160,7 +160,9 @@ wait_tr = False
 wait_sq = False
 
 licznik_tr = 0
+licznik_omin_tr = 0
 licznik_sq = 0
+licznik_omin_sq = 0
 
 try:
     while True:
@@ -172,36 +174,50 @@ try:
         _, path_stop, _ = detect_shape(frame, "square")
 
         if (path_stop and licznik_sq == 0):
+            move_left()
             wait_sq = True
             path_stop = False
+            time.sleep(3.75)
             stop_move()
             box_down()
         elif (path_interrupt and licznik_tr == 0):
-            move_left()
-            wait_tr = True
-            path_interrupt = False
-            time.sleep(1.5)
-            stop_move()
+            if (licznik_omin_tr == 0):
+                move_reverse()
+                time.sleep(1.8)
+                move_right()
+                wait_tr = True
+                path_interrupt = False
+                time.sleep(1.8)
+                stop_move()
+                licznik_omin_tr = licznik_omin_tr + 1
+            elif (licznik_omin_tr == 1):
+                move_reverse()
+                time.sleep(2)
+                move_left()
+                wait = True
+                path_interrupt = False
+                time.sleep(1.8)
+                stop_move()
+                licznik_omin_tr = 0
         else:
                     ######################################
                     ####LINE FOLLOWER ALE JAKO FUNKCJA####
                     ######################################
-            match direction:
-                case 1:
-                    print("Turn Left")
-                    move_left()
-                    time.sleep(0.05)
-                    stop_move()
-                case 2:
-                    print("On Track")
-                    move_reverse()
-                case 3:
-                    print("Turn Right")
-                    move_right()
-                    time.sleep(0.05)
-                    stop_move()
-                case _:
-                    print("Nie wiem gdzie jechac")
+            if(direction==1):
+                print("Turn Left")
+                move_left()
+                time.sleep(0.05)
+                stop_move()
+            elif(direction==2):
+                print("On Track")
+                move_reverse()
+            elif(direction==3):
+                print("Turn Right")
+                move_right()
+                time.sleep(0.05)
+                stop_move()
+            else:
+                print("Nie wiem gdzie jechac")
 
 
         if (wait_tr):

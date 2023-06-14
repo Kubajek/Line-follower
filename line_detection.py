@@ -53,17 +53,16 @@ def main():
         ret, frame = cap.read()
         image, direction = line_follower(frame)
 
-        match direction:
-            case 0:
-                print("No path")
-            case 1:
-                print("Go left")
-            case 2:
-                print("Go straight")
-            case 3:
-                print("Go right")
-            case _:
-                print("Error")
+        if(direction == 0):
+            print("No path")
+        elif(direction == 1):
+            print("Go left")
+        elif(direction == 2):
+            print("Go straight")
+        elif(direction == 3):
+            print("Go right")
+        else:
+            print("Error")
 
         cv2.imshow("Frame", image)
 

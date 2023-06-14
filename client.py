@@ -19,12 +19,15 @@ def call_orders(server_ip):
 
 			print('Data from server: ', data)
 			break
+	
+	return data
 		#print('Server IP: ',   address[0])
 		#print('Server port: ', address[1])
 
 def main():
 	while True:
-		call_orders('172.16.10.198')
+		data = call_orders('172.16.10.198')
+		print(data)
 
 if __name__ == '__main__':
     main()
