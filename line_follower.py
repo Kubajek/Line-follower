@@ -7,6 +7,8 @@ import adafruit_pca9685
 import RPi.GPIO as GPIO
 from shape_recognition import detect_shape
 from adafruit_servokit import ServoKit
+from line_detection import line_follower
+from client import call_orders
 
 # Adres I2C modułu PCA9685
 PCA9685_I2C_ADDRESS = 0x40
@@ -36,10 +38,12 @@ i2c_bus = busio.I2C(board.SCL, board.SDA)
 
 # Inicjalizacja obiektu PCA9685
 pca = adafruit_pca9685.PCA9685(i2c_bus, address=PCA9685_I2C_ADDRESS)
-pca.frequency = 100 # Ustawienie częstotliwości (w Hz)
+pca.frequency = 100  # Ustawienie częstotliwości (w Hz)
+
+kit = ServoKit(channels=16)
 
 # Inicjalizacja pinów GPIO
-GPIO.setmode(GPIO.BCM) # Ustawienie numeracji pinów po numeracji GPIO
+GPIO.setmode(GPIO.BCM)  # Ustawienie numeracji pinów po numeracji GPIO
 GPIO.setup(PRZ_PR_APHASE, GPIO.OUT)
 GPIO.setup(PRZ_LEW_BPHASE, GPIO.OUT)
 GPIO.setup(TYL_PR_APHASE, GPIO.OUT)
@@ -50,6 +54,7 @@ GPIO.setup(TYL_MODE, GPIO.OUT)
 
 GPIO.output(PRZ_MODE, GPIO.HIGH)
 GPIO.output(TYL_MODE, GPIO.HIGH)
+
 
 # Funkcja ustawiająca kierunek obrotu silnika
 def set_motor_direction(motor, direction):
@@ -74,8 +79,9 @@ def set_motor_direction(motor, direction):
         if direction == "TYL":
             GPIO.output(TYL_LEW_BPHASE, GPIO.LOW)
 
+
 # Funkcja do jazdy w przód
-def move_forward():
+def move_forward(stime):
     set_motor_direction("PRZ_PR", "PRZ")
     set_motor_direction("PRZ_LEW", "PRZ")
     set_motor_direction("TYL_PR", "PRZ")
@@ -84,9 +90,11 @@ def move_forward():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = SPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = SPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = SPEED
-    
+    time.sleep(stime)
+
+
 # Funkcja do jazdy w tył
-def move_reverse():
+def move_reverse(stime):
     set_motor_direction("PRZ_PR", "TYL")
     set_motor_direction("PRZ_LEW", "TYL")
     set_motor_direction("TYL_PR", "TYL")
@@ -95,9 +103,11 @@ def move_reverse():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = SPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = SPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = SPEED
-    
+    time.sleep(stime)
+
+
 # Funkcja do jazdy w lewo
-def move_left():
+def move_left(stime):
     set_motor_direction("PRZ_PR", "TYL")
     set_motor_direction("PRZ_LEW", "PRZ")
     set_motor_direction("TYL_PR", "TYL")
@@ -106,9 +116,11 @@ def move_left():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = TSPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = TSPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = TSPEED
+    time.sleep(stime)
+
 
 # Funkcja do jazdy w prawo
-def move_right():
+def move_right(stime):
     set_motor_direction("PRZ_PR", "PRZ")
     set_motor_direction("PRZ_LEW", "TYL")
     set_motor_direction("TYL_PR", "PRZ")
@@ -117,24 +129,29 @@ def move_right():
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = TSPEED
     pca.channels[TYL_PR_AENABLE].duty_cycle = TSPEED
     pca.channels[TYL_LEW_BENABLE].duty_cycle = TSPEED
-    
+    time.sleep(stime)
+
+
 def stop_move():
     pca.channels[PRZ_PR_AENABLE].duty_cycle = 0x0000
     pca.channels[PRZ_LEW_BENABLE].duty_cycle = 0x0000
     pca.channels[TYL_PR_AENABLE].duty_cycle = 0x0000
     pca.channels[TYL_LEW_BENABLE].duty_cycle = 0x0000
 
+
 def box_up():
     angles = list(range(45, -1, -1))
     for angle in angles:
-        ServoKit.servo[WIDLY].angle = angle
+        kit.servo[WIDLY].angle = angle
         time.sleep(0.015)
-        
+
+
 def box_down():
     angles = list(range(0, 46))
     for angle in angles:
-        ServoKit.servo[WIDLY].angle = angle
+        kit.servo[WIDLY].angle = angle
         time.sleep(0.015)
+
 
 # Inicjalizacja kamery
 cap = cv2.VideoCapture(0)
@@ -148,77 +165,81 @@ wait_tr = False
 wait_sq = False
 
 licznik_tr = 0
+licznik_omin_tr = 0
 licznik_sq = 0
+end_route = False
+
+start_programu = True
 
 try:
     while True:
         # Odczytanie obrazu z kamery
         ret, frame = cap.read()
 
-        # Konwertowanie kolorów z BGR do HSV
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-        # Definicja zakresu koloru czarnej linii na białym tle w przestrzeni HSV
-        lower_black = np.array([0, 0, 0])
-        upper_black = np.array([179, 255, 50])
-
-        # Tworzenie maski koloru czarnej linii
-        mask = cv2.inRange(hsv, lower_black, upper_black)
-
+        _, direction = line_follower(frame)
         _, _, path_interrupt = detect_shape(frame, "triangle")
         _, path_stop, _ = detect_shape(frame, "square")
 
         if (path_stop and licznik_sq == 0):
-            wait_sq = True
-            path_stop = False
             stop_move()
-            box_down()
+            if(end_route):
+                move_left(3.75)
+                wait_sq = True
+                path_stop = False
+                end_route = False
+                stop_move()
+                box_down()
+            else:
+                if (not(start_programu)):
+                    move_reverse(2)
+                    box_down()
+                    move_forward(2)
+                    move_left(3.75)
+                while True:
+                    route = call_orders('172.16.10.195')
+
+                    if (route != 'wait'):
+                        break
+
+                time.sleep(2)
+                box_up()
+                end_route = True
+
         elif (path_interrupt and licznik_tr == 0):
-            move_left()
-            wait_tr = True
+            move_reverse(1.8)
+
+            if (len(route) == 1):
+                move_left(0)
+            if (len(route) == 2):
+                if (licznik_omin_tr == 0):
+                    move_right(0)
+                else:
+                    move_reverse(0)
+
+            wait = True
             path_interrupt = False
-            time.sleep(1.5)
+            time.sleep(1.8)
             stop_move()
+            licznik_omin_tr += 1
         else:
-            # Wykrywanie konturów
-            contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    ######################################
+                    ####LINE FOLLOWER ALE JAKO FUNKCJA####
+                    ######################################
+            if(direction==1):
+                print("Turn Left")
+                move_left(0.05)
+                stop_move()
+            elif(direction==2):
+                print("On Track")
+                move_reverse(0)
+            elif(direction==3):
+                print("Turn Right")
+                move_right(0.05)
+                stop_move()
+            else:
+                print("Nie wiem gdzie jechac")
 
-            if len(contours) > 0:
-                # Wybieranie największego konturu
-                c = max(contours, key=cv2.contourArea)
-                M = cv2.moments(c)
 
-                if M['m00'] != 0:
-                    # Obliczanie centroidy konturu
-                    cx = int(M['m10'] / M['m00'])
-                    cy = int(M['m01'] / M['m00'])
-
-                    # print("CX: " + str(cx) + " CY: " + str(cy))
-
-                    if cx >= 480:
-                        print("Turn Left")
-                        move_left()
-                        time.sleep(0.05)
-                        stop_move()
-                    elif cx < 480 and cx > 160:
-                        #print("On Track")
-                        move_reverse()
-                    elif cx <= 160:
-                        print("Turn Right")
-                        move_right()
-                        time.sleep(0.05)
-                        stop_move()
-
-                    # Rysowanie centroidy
-                    cv2.circle(frame, (cx, cy), 5, (255, 255, 255), -1)
-
-                # Rysowanie konturu
-                cv2.drawContours(frame, [c], -1, (0, 255, 0), 1)
-
-        # Wyświetlanie obrazu z kamery
-        # cv2.imshow("Line Detection", frame)
-        # cv2.imshow("Mask", mask)
-        
         if (wait_tr):
             licznik_tr += 1
 
@@ -232,6 +253,7 @@ try:
         if (licznik_sq >= 20):
             licznik_sq = 0
             wait_sq = False
+
         # Zakończenie pętli po naciśnięciu klawisza 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
