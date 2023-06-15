@@ -13,7 +13,7 @@ from client import call_orders
 # Adres I2C modułu PCA9685
 PCA9685_I2C_ADDRESS = 0x40
 
-SPEED = 0x2800
+SPEED = 0x3000
 TSPEED = 0x8000
 
 # Numer kanału dla silnika DC [Numery wyprowadzeń PCA9685]
@@ -197,25 +197,25 @@ try:
             stop_move()
             print('oto kwadrat')
             box_down()
-            move_reverse(2)
-            # if(end_route):
-            #     move_left(3.75)
-            #     wait_sq = True
-            #     path_stop = False
-            #     end_route = False
-            #     stop_move()
-            #     box_down()
-            # else:
-                # if (not(start_programu)):
-                #     move_reverse(2)
-                #     box_down()
-                #     move_forward(2)
-                #     move_left(3.75)
-                # while True:
-                #     route = call_orders('172.16.10.195')
+            # move_reverse(2)
+            if(end_route):
+                move_left(3.75)
+                wait_sq = True
+                path_stop = False
+                end_route = False
+                stop_move()
+                box_down()
+            else:
+                if (not(start_programu)):
+                    move_reverse(2)
+                    box_down()
+                    move_forward(2)
+                    move_left(3.75)
+                while True:
+                    route = call_orders('172.16.10.195')
 
-                #     if (route != 'wait'):
-                #         break
+                    if (route != 'wait'):
+                        break
                 
             box_up()
             end_route = True
@@ -225,14 +225,14 @@ try:
             print('I see ur trojkat')
             print('licznik trojkatow: ', licznik_omin_tr)
             move_reverse(1.5)
-            move_right(2)
-            # if (len(route) == 1):
-            #     move_left(1.8)
-            # if (len(route) == 2):
-            #     if (licznik_omin_tr == 0):
-            #         move_right(0)
-            #     else:
-            #         move_reverse(0)
+            # move_right(2.2)
+            if (len(route) == 1):
+                move_left(2.2)
+            if (len(route) == 2):
+                if (licznik_omin_tr == 0):
+                    move_right(0)
+                else:
+                    move_reverse(0)
 
             wait_tr = True
             path_interrupt = False
